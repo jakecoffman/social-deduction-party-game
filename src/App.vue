@@ -10,6 +10,13 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
+  @import 'src/assets/normalize';
+  @import 'src/assets/skeleton';
 
+  body {
+    margin: 6px;
+    color: #cacaca;
+    background: black;
+  }
 </style>
