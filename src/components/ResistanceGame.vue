@@ -110,12 +110,12 @@
         <div class="player" :class="{you: p.Id === you.Id, suspect: suspects.indexOf(p.Id) > -1}" @click="suspect(p)">
           <span style="padding-top: 25px;">{{getName(p)}}</span>
           <div>
-            <span v-if="p.IsLeader">🎖</span>
-            <span v-if="revealed && you.Spies && you.Spies.indexOf(index) > -1">🕵</span>
-            <span v-if="!p.IsBot && !p.Connected">☠</span>
-            <span v-if="p.IsBot">🤖</span>
-            <span v-if="p.OnMission">🔫</span>
-            <span v-if="selected.indexOf(index) > -1">🔫</span>
+            <span class="badge" v-if="p.IsLeader">🎖</span>
+            <span class="badge" v-if="revealed && you.Spies && you.Spies.indexOf(index) > -1">🕵</span>
+            <span class="badge" v-if="!p.IsBot && !p.Connected">☠</span>
+            <span class="badge" v-if="p.IsBot">🤖</span>
+            <span class="badge" v-if="p.OnMission">🔫</span>
+            <span class="badge" v-if="selected.indexOf(index) > -1">🔫</span>
           </div>
         </div>
       </div>
@@ -449,5 +449,9 @@
   .center {
     align-items: center;
     justify-content: space-around;
+  }
+
+  .badge {
+    font-size: 20px;
   }
 </style>
