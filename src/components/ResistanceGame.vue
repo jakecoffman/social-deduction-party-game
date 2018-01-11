@@ -175,12 +175,12 @@
     <div v-if="game.State === 'lobby'">
       <hr/>
 
-      <div class="flex">
+      <div class="flex fill">
         <input class="flex-1" type="text" maxlength="8" v-model="name" placeholder="enter name">
         <button @click="send({Type: 'name', Data: name})">change name</button>
       </div>
 
-      <div class="flex">
+      <div class="flex fill">
         <input class="flex-1" type="number" maxlength="8" v-model="joinGame" placeholder="game id">
         <button @click="send({Type: 'join', Data: joinGame})">join game</button>
       </div>
@@ -449,5 +449,9 @@
   .center {
     align-items: center;
     justify-content: space-around;
+  }
+
+  .fill {
+    width: 100%;
   }
 </style>
