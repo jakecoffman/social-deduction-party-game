@@ -1,8 +1,23 @@
 <template>
   <div class="hello">
+    <div v-if="game.State !== 'lobby'">
+      <h3>missions</h3>
+      <ol>
+        <li v-for="(m, i) in game.Missions">
+          <span v-if="m.Complete">
+            <span v-if="m.Success"> succeeded 🙌</span>
+            <span v-else>failed <span v-for="n in m.NumFails">💥</span></span>
+          </span>
+          <span v-else>
+            Team members required: {{m.Slots}}
+          </span>
+        </li>
+      </ol>
+    </div>
+
     <div v-if="game.State === 'lobby'">
       <h2>lobby</h2>
-      Game ID: <a :href="linky()">{{game.Id}}</a>
+      Game ID: {{game.Id}}
       <p>
         You need 5 - 10 players to start.
       </p>
@@ -22,8 +37,8 @@
       <div v-if="you.IsLeader">
         <h2>build a team</h2>
         <p>You are the leader 🎖. Select a team to go on the mission and click Submit.</p>
-        <div>
-          <button @click="send({Type: 'assign', Data: selected})">
+        <div class="flex center">
+          <button @click="send({Type: 'assign', Data: selected})" class="button-primary">
             Submit
           </button>
         </div>
@@ -90,42 +105,31 @@
     <h3>players</h3>
 
     <div id="players">
-      <div class="player" v-for="(p, index) in game.Players" :class="{you: p.Id === you.Id}">
-        <span>{{getName(p)}}</span>
-        <br/>
-        <div>
-          <span v-if="p.IsLeader">🎖</span>
-          <span v-if="revealed && you.Spies && you.Spies.indexOf(index) > -1">🕵</span>
-          <span v-if="!p.IsBot && !p.Connected">☠</span>
-          <span v-if="p.IsBot">🤖</span>
-          <span v-if="p.OnMission">🔫</span>
-        </div>
-        <br/>
+      <div v-for="(p, index) in game.Players" class="flex col center">
         <button class="select" v-if="game.State === 'building' && you.IsLeader" @click="toggleteam(index)">Select</button>
-        <span v-if="selected.indexOf(index) > -1">🔫</span>
+        <div class="player" :class="{you: p.Id === you.Id, suspect: suspects.indexOf(p.Id) > -1}" @click="suspect(p)">
+          <span style="padding-top: 25px;">{{getName(p)}}</span>
+          <div>
+            <span v-if="p.IsLeader">🎖</span>
+            <span v-if="revealed && you.Spies && you.Spies.indexOf(index) > -1">🕵</span>
+            <span v-if="!p.IsBot && !p.Connected">☠</span>
+            <span v-if="p.IsBot">🤖</span>
+            <span v-if="p.OnMission">🔫</span>
+            <span v-if="selected.indexOf(index) > -1">🔫</span>
+          </div>
+        </div>
       </div>
     </div>
 
     <div v-if="game.State !== 'lobby'">
-      <button class="pure-button" @click="reveal">Show/Hide spies</button>
-      <div v-if="revealed">
-        <div v-if="!you.Spies">
-          <p>You are not a spy.</p>
+      <div class="flex center col">
+        <button class="pure-button" @click="reveal">Show/Hide spies</button>
+        <div v-if="revealed">
+          <div v-if="!you.Spies">
+            <p>You are not a spy.</p>
+          </div>
         </div>
       </div>
-
-      <h3>missions</h3>
-      <ol>
-        <li v-for="(m, i) in game.Missions">
-          <span v-if="m.Complete">
-            <span v-if="m.Success"> succeeded 🙌</span>
-            <span v-else>failed <span v-for="n in m.NumFails">💥</span></span>
-          </span>
-          <span v-else>
-            Team members required: {{m.Slots}}
-          </span>
-        </li>
-      </ol>
 
       <h3>history</h3>
 
@@ -143,7 +147,7 @@
             <td>
               {{h.Mission+1}}
             </td>
-            <td>{{getName(game.Players[i])}}</td>
+            <td>{{getName(game.Players[i%game.Players.length])}}</td>
             <td>
               <div v-for="pid in h.Assignments">
                 <div v-for="(p, index) in game.Players" v-if="index === pid">
@@ -171,13 +175,13 @@
     <div v-if="game.State === 'lobby'">
       <hr/>
 
-      <div>
-        <input type="text" maxlength="8" v-model="name" placeholder="enter name">
+      <div class="flex">
+        <input class="flex-1" type="text" maxlength="8" v-model="name" placeholder="enter name">
         <button @click="send({Type: 'name', Data: name})">change name</button>
       </div>
 
-      <div>
-        <input type="number" maxlength="8" v-model="joinGame" placeholder="game id">
+      <div class="flex">
+        <input class="flex-1" type="number" maxlength="8" v-model="joinGame" placeholder="game id">
         <button @click="send({Type: 'join', Data: joinGame})">join game</button>
       </div>
     </div>
@@ -198,6 +202,8 @@
         <li>🙌 mission succeeded - no fail votes</li>
       </ul>
     </div>
+
+    <button @click="send({Type: 'join', Data: ''})">leave game</button>
   </div>
 </template>
 
@@ -211,9 +217,6 @@
         you: {},
         selected: [],
         msgs: [],
-        linky: function () {
-          return 'http://localhost:8112/#' + this.game.Id;
-        },
         revealed: false,
         revealTimeout: null,
         connected: false,
@@ -221,7 +224,10 @@
 
         // user inputs
         name: '',
-        joinGame: ''
+        joinGame: '',
+
+        // local suspect list
+        suspects: []
       }
     },
     created: function () {
@@ -305,6 +311,14 @@
           return player.Name;
         }
         return "Player " + player.Id;
+      },
+      suspect: function(player) {
+        const i = this.suspects.indexOf(player.Id);
+        if (i > -1) {
+          this.suspects.splice(i, 1);
+        } else {
+          this.suspects.push(player.Id);
+        }
       }
     }
   }
@@ -314,9 +328,15 @@
 <style scoped lang="scss">
   $text: #cacaca;
   $outline: #787878;
-  $info: #1e214b;
+  $info: #334;
   $accent: #223c21;
   $accent-light: #4f8a4c;
+
+  input {
+    color: black;
+    background: #ebebeb;
+    margin-right: 2px;
+  }
 
   button {
     color: $text;
@@ -337,15 +357,17 @@
   }
 
   .player {
-    background: #3c3929;
-    border-radius: 6px;
+    color: white;
+    background: #5d595a;
+    border: 1px solid white;
+    border-radius: 50%;
     padding: 5px;
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100px;
-    min-height: 90px;
+    min-height: 100px;
   }
 
   .you {
@@ -372,12 +394,13 @@
   }
 
   #connection {
+    border-radius: 6px;
     display: block;
     position: fixed;
     bottom: 10px;
     left: 10px;
     right: 10px;
-    background: $info;
+    background: #ff342e;
     color: $text;
     padding: 10px 40px 10px 20px;
     z-index: 1000;
@@ -403,12 +426,24 @@
     color: #ff342e;
   }
 
+  .suspect {
+    background: #6d1614;
+  }
+
   .select {
     padding: 0 10px;
   }
 
   .flex {
     display: flex;
+  }
+
+  .flex-1 {
+    flex: 1;
+  }
+
+  .col {
+    flex-direction: column;
   }
 
   .center {
