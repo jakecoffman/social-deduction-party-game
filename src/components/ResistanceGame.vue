@@ -113,7 +113,6 @@
             <span class="badge" v-if="p.IsLeader">🎖</span>
             <span class="badge" v-if="revealed && you.Spies && you.Spies.indexOf(index) > -1">🕵</span>
             <span class="badge" v-if="!p.IsBot && !p.Connected">☠</span>
-            <span class="badge" v-if="p.IsBot">🤖</span>
             <span class="badge" v-if="p.OnMission">🔫</span>
             <span class="badge" v-if="selected.indexOf(index) > -1">🔫</span>
           </div>
@@ -195,7 +194,6 @@
       <ul class="unstyled">
         <li>🎖 leader - this player chooses the away team</li>
         <li>🕵 spy - can only be seen by other spys</li>
-        <li>🤖 bot - an automated player that acts randomly</li>
         <li>🔫 on mission - player is on/proposed for the mission</li>
         <li>☠ disconnected - this player needs to reconnect</li>
         <li>💥 mission failed - shows amount of fail votes</li>
@@ -274,6 +272,7 @@
             this.game = data.Update;
             this.you = data.You;
             this.selected = [];
+            this.revealed = this.game.State === "spywin" || this.game.State === "resistancewin";
             break;
           case "cookie":
             document.cookie = data.Cookie;
@@ -309,6 +308,9 @@
       getName: function(player) {
         if (player.Name) {
           return player.Name;
+        }
+        if (player.IsBot) {
+          return "Bot " + player.Id
         }
         return "Player " + player.Id;
       },
