@@ -64,8 +64,11 @@
         If this team is rejected, spys win the game.
       </p>
       <div class="vote">
-        <button @click="send({Type: 'voteteam', Data: true})">Accept</button>
-        <button @click="send({Type: 'voteteam', Data: false})">Reject</button>
+        <button @click="voteTeam(true)">Accept</button>
+        <button @click="voteTeam(false)">Reject</button>
+      </div>
+      <div class="vote">
+        <span v-if="voted">You voted</span>
       </div>
     </div>
     <div v-if="game.State === 'mission'">
@@ -76,12 +79,15 @@
         <p>If you are Resistance, you cannot vote to Fail.</p>
 
         <div class="vote">
-          <button @click="send({Type: 'votemission', Data: true})">
+          <button @click="voteMission(true)">
             Succeed
           </button>
-          <button @click="send({Type: 'votemission', Data: false})">
+          <button @click="voteMission(false)">
             Fail
           </button>
+        </div>
+        <div class="vote">
+          <span v-if="voted">You voted</span>
         </div>
       </div>
       <div v-if="!you.OnMission">
@@ -219,6 +225,8 @@
         revealTimeout: null,
         connected: false,
         initial: true,
+        lastGameState: null,
+        voted: false,
 
         // user inputs
         name: '',
@@ -273,6 +281,10 @@
             this.you = data.You;
             this.selected = [];
             this.revealed = this.game.State === "spywin" || this.game.State === "resistancewin";
+            if (this.lastGameState !== this.game.State) {
+              this.voted = false;
+              this.lastGameState = this.game.State;
+            }
             break;
           case "cookie":
             document.cookie = data.Cookie;
@@ -321,6 +333,14 @@
         } else {
           this.suspects.push(player.Id);
         }
+      },
+      voteTeam(value) {
+        this.send({Type: 'voteteam', Data: value});
+        this.voted = true;
+      },
+      voteMission(value) {
+        this.send({Type: 'votemission', Data: value});
+        this.voted = true;
       }
     }
   }
