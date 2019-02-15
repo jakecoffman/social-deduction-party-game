@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import ResistanceGame from '@/components/ResistanceGame'
+import Game from '@/components/Game'
 
 Vue.use(Router)
 
@@ -9,12 +9,12 @@ export default new Router({
     {
       path: '/',
       name: 'main',
-      component: ResistanceGame
+      component: Game
     },
     {
       path: '/:id',
       name: 'game',
-      component: ResistanceGame
+      component: Game
     }
   ]
 })

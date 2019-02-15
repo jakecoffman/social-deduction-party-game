@@ -76,7 +76,7 @@
         <h2>on mission</h2>
         <p>Vote for if this mission succeeds or fails</p>
 
-        <p>If you are Resistance, you cannot vote to Fail.</p>
+        <p>If you are not a Spy, you cannot vote to Fail.</p>
 
         <div class="vote">
           <button @click="voteMission(true)">
@@ -102,7 +102,7 @@
       <button @click="send({Type: 'ready'})">Ready</button>
     </div>
     <div v-if="game.State === 'resistancewin'">
-      <h2>Resistance win!</h2>
+      <h2>Spys lose!</h2>
       <p>Click ready to go back to the lobby</p>
 
       <button @click="send({Type: 'ready'})">Ready</button>
@@ -213,7 +213,7 @@
 
 <script>
   export default {
-    name: 'ResistanceGame',
+    name: 'Game',
     data() {
       return {
         ws: null,
