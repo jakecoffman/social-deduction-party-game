@@ -1,1 +1,1 @@
-# social deduction party game
+deprecated, see https://github.com/jakecoffman/spytown-web
